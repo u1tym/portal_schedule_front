@@ -1,11 +1,11 @@
 export interface ScheduleRequest {
   username: string;
-  hash_value: string;
+  session_string: string;
 }
 
 export interface ScheduleResponse {
   success: boolean;
-  hash_value: string;
+  session_string: string;
 }
 
 export interface ApiError {

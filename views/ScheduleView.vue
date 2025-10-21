@@ -38,13 +38,13 @@ const getSchedule = async () => {
     // スケジュール取得要求
     const response = await ScheduleService.getSchedule({
       username: username,
-      hash_value: sessionString
+      session_string: sessionString
     });
 
     if (response.success) {
-      // 新しいハッシュ値を保持
-      scheduleData.value = { hash_value: response.hash_value };
-      sessionStorage.setItem('session_string', response.hash_value);
+      // 新しいセッション文字列を保持
+      scheduleData.value = { session_string: response.session_string };
+      sessionStorage.setItem('session_string', response.session_string);
     } else {
       throw new Error('スケジュール取得に失敗しました');
     }
