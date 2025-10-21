@@ -27,9 +27,9 @@ const getSchedule = async () => {
   errorMessage.value = '';
 
   try {
-    // ローカルストレージからユーザー名とセッション文字列を取得
+    // セッションストレージからユーザー名とセッション文字列を取得
     const username = 'admin'; // 暫定的に固定値
-    const sessionString = localStorage.getItem('session_string');
+    const sessionString = sessionStorage.getItem('session_string');
 
     if (!sessionString) {
       throw new Error('セッションが見つかりません');
@@ -44,7 +44,7 @@ const getSchedule = async () => {
     if (response.success) {
       // 新しいハッシュ値を保持
       scheduleData.value = { hash_value: response.hash_value };
-      localStorage.setItem('session_string', response.hash_value);
+      sessionStorage.setItem('session_string', response.hash_value);
     } else {
       throw new Error('スケジュール取得に失敗しました');
     }
