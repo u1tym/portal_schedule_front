@@ -81,7 +81,9 @@ const basicTestDays = ref([
         startDateTime: new Date(2024, 0, 1, 10, 0),
         duration: 60,
         isTodoCompleted: false,
-        color: '#e3f2fd'
+        color: '#e3f2fd',
+        positionNumber: 1,
+        isTodo: false
       }
     ]
   },
@@ -103,7 +105,9 @@ const basicTestDays = ref([
         startDateTime: new Date(2024, 0, 3, 14, 0),
         duration: 90,
         isTodoCompleted: true,
-        color: '#f3e5f5'
+        color: '#f3e5f5',
+        positionNumber: 1,
+        isTodo: true
       }
     ]
   },
@@ -227,7 +231,9 @@ const generateCalendarDays = () => {
         startDateTime: new Date(date.getFullYear(), date.getMonth(), date.getDate(), 10, 0),
         duration: 60,
         isTodoCompleted: i % 2 === 0,
-        color: i % 2 === 0 ? '#e3f2fd' : '#f3e5f5'
+        color: i % 2 === 0 ? '#e3f2fd' : '#f3e5f5',
+        positionNumber: 1,
+        isTodo: i % 3 === 0
       }];
     }
 
@@ -293,7 +299,9 @@ const generateMonthDays = () => {
         startDateTime: new Date(date.getFullYear(), date.getMonth(), date.getDate(), 14, 0),
         duration: 90,
         isTodoCompleted: date.getDate() % 10 === 0,
-        color: date.getDate() % 10 === 0 ? '#e8f5e8' : '#fff3e0'
+        color: date.getDate() % 10 === 0 ? '#e8f5e8' : '#fff3e0',
+        positionNumber: 1,
+        isTodo: date.getDate() % 7 === 0
       }];
     }
 

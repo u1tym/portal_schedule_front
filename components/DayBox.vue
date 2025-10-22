@@ -17,6 +17,8 @@ interface ScheduleInfo {
   duration: number;     // 期間
   isTodoCompleted: boolean; // TODO完了フラグ
   color: string;        // 描画色
+  positionNumber: number; // 表示順（必須項目）
+  isTodo: boolean;      // TODOフラグ（必須項目）
 }
 
 // Props定義
@@ -172,7 +174,10 @@ const drawDayBox = () => {
     const scheduleHeight = 15;
     const maxSchedules = Math.floor((height - scheduleStartY - 10) / (scheduleHeight + 2));
 
-    props.schedules.slice(0, maxSchedules).forEach((schedule, index) => {
+    // positionNumberでソートしてから表示
+    const sortedSchedules = [...props.schedules].sort((a, b) => a.positionNumber - b.positionNumber);
+
+    sortedSchedules.slice(0, maxSchedules).forEach((schedule, index) => {
       const y = scheduleStartY + index * (scheduleHeight + 2);
 
       // スケジュールの背景
