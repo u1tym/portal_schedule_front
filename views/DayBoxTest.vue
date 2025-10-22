@@ -328,14 +328,14 @@ h1 {
 .test-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 0px; /* 間隔を0pxに設定 */
 }
 
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-  max-width: 900px;
+  grid-template-columns: repeat(7, 140px); /* 固定サイズ140pxに変更 */
+  gap: 0px; /* 間隔を0pxに設定 */
+  max-width: 980px; /* 7 * 140px = 980px */
   margin: 0 auto;
 }
 
@@ -351,9 +351,9 @@ h1 {
 
 .month-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-  max-width: 900px;
+  grid-template-columns: repeat(7, 140px); /* 固定サイズ140pxに変更 */
+  gap: 0px; /* 間隔を0pxに設定 */
+  max-width: 980px; /* 7 * 140px = 980px */
   margin: 0 auto 20px;
 }
 
@@ -382,8 +382,8 @@ h1 {
 @media (max-width: 768px) {
   .calendar-grid,
   .month-grid {
-    grid-template-columns: repeat(7, 1fr);
-    gap: 1px;
+    grid-template-columns: repeat(7, 140px); /* 固定サイズを維持 */
+    gap: 0px; /* 間隔を0pxに設定 */
   }
 
   .test-grid {

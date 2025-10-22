@@ -60,7 +60,7 @@ const drawDayBox = () => {
   d3.select(svgElement).selectAll('*').remove();
 
   // SVGサイズ設定
-  const width = 120;
+  const width = 140;
   const height = 100;
 
   // SVGサイズを設定
@@ -73,17 +73,17 @@ const drawDayBox = () => {
   // メイングループ
   const g = d3.select(svgElement)
     .append('g')
-    .attr('transform', 'translate(2, 2)');
+    .attr('transform', 'translate(0, 0)'); // マージンを0に設定
 
   // 外枠を描画
   const borderRect = g.append('rect')
     .attr('x', 0)
     .attr('y', 0)
-    .attr('width', width - 4)
-    .attr('height', height - 4)
+    .attr('width', width)
+    .attr('height', height)
     .attr('fill', 'none')
     .attr('stroke', '#333333')
-    .attr('stroke-width', 0.5);
+    .attr('stroke-width', 0.25);
 
   console.log('外枠描画完了', borderRect.node());
 
@@ -217,14 +217,14 @@ watch(() => [props.date, props.holidayNote, props.schedules], () => {
 <style scoped>
 .day-box-container {
   display: inline-block;
-  margin: 2px;
-  border: 1px solid #eee;
+  margin: 0px; /* マージンを0pxに設定 */
+  border: none; /* ボーダーを削除 */
   box-sizing: border-box;
 }
 
 .day-box-svg {
   display: block;
-  width: 120px;
+  width: 140px;
   height: 100px;
 }
 </style>
