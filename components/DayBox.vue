@@ -75,13 +75,32 @@ const drawDayBox = () => {
     .append('g')
     .attr('transform', 'translate(0, 0)'); // マージンを0に設定
 
+  // 背景色と文字色を決定
+  const dayOfWeek = props.date.getDay();
+  const isSunday = dayOfWeek === 0;
+  const isSaturday = dayOfWeek === 6;
+  const hasHolidayNote = props.holidayNote && props.holidayNote.trim() !== '';
+
+  let backgroundColor = 'white';
+  let textColor = '#333333';
+
+  if (isSunday || hasHolidayNote) {
+    // 日曜日または休日注釈がある場合：薄い赤背景、赤文字
+    backgroundColor = '#ffebee';
+    textColor = '#d32f2f';
+  } else if (isSaturday) {
+    // 土曜日の場合：薄い青背景、青文字
+    backgroundColor = '#e3f2fd';
+    textColor = '#1976d2';
+  }
+
   // 外枠を描画
   const borderRect = g.append('rect')
     .attr('x', 0)
     .attr('y', 0)
     .attr('width', width)
     .attr('height', height)
-    .attr('fill', 'none')
+    .attr('fill', backgroundColor)
     .attr('stroke', '#333333')
     .attr('stroke-width', 0.25);
 
@@ -96,7 +115,7 @@ const drawDayBox = () => {
     .attr('font-family', 'Arial, sans-serif')
     .attr('font-size', '16px')
     .attr('font-weight', 'bold')
-    .attr('fill', '#333333')
+    .attr('fill', textColor) // 決定された文字色を使用
     .text(dayText);
 
   console.log('日付描画完了', dayText, dayTextElement.node());
