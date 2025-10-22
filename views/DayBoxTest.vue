@@ -85,6 +85,20 @@
         </div>
       </div>
     </div>
+
+    <div class="test-section">
+      <h2>DayLongBoxテスト（3日分）</h2>
+      <div class="day-long-box-grid">
+        <DayLongBox
+          v-for="(day, index) in dayLongBoxTestDays"
+          :key="index"
+          :date="day.date"
+          :holiday-note="day.holidayNote"
+          :is-current-month="day.isCurrentMonth"
+          :schedules="day.schedules"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -92,6 +106,7 @@
 import { ref, computed, onMounted } from 'vue';
 import DayBox from '../components/DayBox.vue';
 import DayBoxTitle from '../components/DayBoxTitle.vue';
+import DayLongBox from '../components/DayLongBox.vue';
 
 // 基本テスト用の日付データ
 const basicTestDays = ref([
@@ -475,6 +490,63 @@ const generateCalendarDays = () => {
   calendarDays.value = days;
 };
 
+// DayLongBoxテスト用の日付データ
+const dayLongBoxTestDays = ref([
+  {
+    date: new Date(2024, 0, 1),
+    holidayNote: '',
+    isCurrentMonth: true,
+    schedules: [
+      {
+        id: 1,
+        title: '新年会',
+        isAllDay: true,
+        startDateTime: new Date(2024, 0, 1, 0, 0),
+        duration: 1,
+        isTodoCompleted: false,
+        color: '#ff6b6b',
+        positionNumber: 1,
+        isTodo: false
+      },
+      {
+        id: 2,
+        title: '☐ 年賀状作成',
+        isAllDay: true,
+        startDateTime: new Date(2024, 0, 1, 0, 0),
+        duration: 1,
+        isTodoCompleted: true,
+        color: '#4ecdc4',
+        positionNumber: 2,
+        isTodo: true
+      }
+    ]
+  },
+  {
+    date: new Date(2024, 0, 2),
+    holidayNote: '',
+    isCurrentMonth: true,
+    schedules: [
+      {
+        id: 3,
+        title: '☐ 買い物',
+        isAllDay: true,
+        startDateTime: new Date(2024, 0, 2, 0, 0),
+        duration: 1,
+        isTodoCompleted: false,
+        color: '#45b7d1',
+        positionNumber: 1,
+        isTodo: true
+      }
+    ]
+  },
+  {
+    date: new Date(2024, 0, 3),
+    holidayNote: '',
+    isCurrentMonth: true,
+    schedules: []
+  }
+]);
+
 // スケジュール編集メソッド
 const editSchedule = (scheduleId: number) => {
   alert(`スケジュールID: ${scheduleId} がクリックされました`);
@@ -624,6 +696,13 @@ h1 {
 
 .month-display {
   text-align: center;
+}
+
+.day-long-box-grid {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .month-display h3 {
