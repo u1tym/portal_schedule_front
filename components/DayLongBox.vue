@@ -65,7 +65,9 @@ const drawDayLongBox = () => {
 
   // SVGサイズ設定
   const width = 140;
-  const height = 660; // 終日エリア(60px) + 24時間分の高さ（1時間=25px）
+  const allDayAreaHeight = 60; // 終日エリアの高さ
+  const hourHeight = 50; // 1時間の高さ（2倍に拡大）
+  const height = allDayAreaHeight + (24 * hourHeight); // 終日エリア + 24時間分の高さ
 
   // SVGサイズを設定
   d3.select(svgElement)
@@ -154,7 +156,6 @@ const drawDayLongBox = () => {
   }
 
   // 終日スケジュール表示領域を描画
-  const allDayAreaHeight = 60; // 終日エリアの高さ（3行分）
   const allDayArea = g.append('rect')
     .attr('x', 5)
     .attr('y', 5)
@@ -218,7 +219,8 @@ const drawDayLongBox = () => {
           .attr('height', scheduleHeight - 2)
           .attr('fill', `url(#${gradientId})`)
           .attr('rx', 2)
-          .attr('opacity', opacity);
+          .attr('opacity', opacity)
+          .style('cursor', 'pointer'); // マウスオーバー時に指マーク
 
         let currentX = 10;
 
@@ -266,13 +268,26 @@ const drawDayLongBox = () => {
           schedule.title;
 
         titleElement.text(titleText);
+
+        // 透明なクリック可能領域を追加
+        g.append('rect')
+          .attr('x', 8)
+          .attr('y', y - 12)
+          .attr('width', width - 16)
+          .attr('height', scheduleHeight - 2)
+          .attr('fill', 'transparent')
+          .attr('rx', 2)
+          .style('cursor', 'pointer')
+          .on('click', () => {
+            emit('scheduleClick', schedule.id);
+          });
       });
     }
   }
 
   // 24時間分の時間線を描画
   for (let hour = 0; hour < 24; hour++) {
-    const y = 5 + allDayAreaHeight + (hour * 25); // 終日エリアの下から開始、1時間=25px
+    const y = 5 + allDayAreaHeight + (hour * hourHeight); // 終日エリアの下から開始、1時間=50px
 
     // 時間線（横線）
     g.append('line')
@@ -283,6 +298,123 @@ const drawDayLongBox = () => {
       .attr('stroke', '#cccccc')
       .attr('stroke-width', 0.5)
       .attr('opacity', opacity);
+  }
+
+  // 終日ではないスケジュールを描画
+  if (props.schedules && props.schedules.length > 0) {
+    const timeSchedules = props.schedules.filter(schedule => !schedule.isAllDay);
+
+    timeSchedules.forEach(schedule => {
+      const startTime = new Date(schedule.startDateTime);
+      const endTime = new Date(startTime.getTime() + schedule.duration * 60000); // durationは分単位
+
+      // スケジュールの開始位置を計算
+      const startHour = startTime.getHours();
+      const startMinute = startTime.getMinutes();
+      const startY = 5 + allDayAreaHeight + (startHour * hourHeight) + (startMinute / 60) * hourHeight;
+
+      // スケジュールの終了位置を計算
+      const endHour = endTime.getHours();
+      const endMinute = endTime.getMinutes();
+      const endY = 5 + allDayAreaHeight + (endHour * hourHeight) + (endMinute / 60) * hourHeight;
+
+      const scheduleHeight = endY - startY;
+
+      // スケジュールの背景を描画（単色）
+      g.append('rect')
+        .attr('x', 8)
+        .attr('y', startY)
+        .attr('width', width - 16)
+        .attr('height', scheduleHeight)
+        .attr('fill', schedule.color)
+        .attr('rx', 2)
+        .attr('opacity', opacity * 0.8);
+
+      // スケジュールの内容を描画
+      let currentX = 10;
+      const timeY = startY + 15; // 時間・チェックボックスの位置（少し間隔を開ける）
+
+      // タイトルの位置を決定（箱の高さに応じて）
+      const minTitleY = startY + 30; // 通常のタイトル位置
+      const maxTitleY = startY + scheduleHeight - 5; // 箱の下端から5px上
+      const titleY = Math.min(minTitleY, maxTitleY); // 箱の外に出ないように調整
+
+      // チェックボックス
+      if (schedule.isTodo) {
+        const checkboxText = schedule.isTodoCompleted ? '☑' : '☐';
+        g.append('text')
+          .attr('x', currentX)
+          .attr('y', timeY)
+          .attr('font-family', 'Arial, sans-serif')
+          .attr('font-size', '12px')
+          .attr('fill', '#ffffff')
+          .attr('opacity', opacity)
+          .text(checkboxText);
+
+        currentX += 15;
+      }
+
+      // 時間
+      const timeStr = startTime.toLocaleTimeString('ja-JP', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+      g.append('text')
+        .attr('x', currentX)
+        .attr('y', timeY)
+        .attr('font-family', 'Arial, sans-serif')
+        .attr('font-size', '11px')
+        .attr('fill', '#ffffff')
+        .attr('opacity', opacity)
+        .text(timeStr);
+
+      // 時刻の終了位置を正確に計算
+      const timeEndX = currentX + timeStr.length * 6.5; // 時刻の実際の終了位置
+
+      // タイトル（箱の高さに応じて配置）
+      let titleX = 10;
+      let titleYPos = titleY;
+
+      // タイトルが時刻と同じ行になる場合の処理
+      if (titleY <= timeY + 5) {
+        // 時刻と同じ行に配置（時刻の右側）
+        titleX = timeEndX + 1; // 時刻の実際の終了位置の右側に配置（さらに間隔を狭める）
+        titleYPos = timeY;
+      }
+
+      const titleElement = g.append('text')
+        .attr('x', titleX)
+        .attr('y', titleYPos)
+        .attr('font-family', 'Arial, sans-serif')
+        .attr('font-size', '11px')
+        .attr('fill', '#ffffff')
+        .attr('opacity', opacity);
+
+      if (schedule.isTodoCompleted) {
+        titleElement.attr('text-decoration', 'line-through');
+      }
+
+      const maxTitleLength = Math.floor((width - currentX - 10) / 5.5);
+      const titleText = schedule.title.length > maxTitleLength ?
+        schedule.title.substring(0, maxTitleLength) + '...' :
+        schedule.title;
+
+      titleElement.text(titleText);
+
+      // クリック可能な透明な領域
+      g.append('rect')
+        .attr('x', 8)
+        .attr('y', startY)
+        .attr('width', width - 16)
+        .attr('height', scheduleHeight)
+        .attr('fill', 'transparent')
+        .attr('rx', 2)
+        .style('cursor', 'pointer')
+        .on('click', () => {
+          emit('scheduleClick', schedule.id);
+        });
+    });
   }
 
   console.log('DayLongBox描画完了', svgElement.innerHTML);
@@ -337,6 +469,6 @@ watch(() => [props.date, props.holidayNote, props.schedules, props.isCurrentMont
 .day-long-box-svg {
   display: block;
   width: 140px;
-  height: 660px;
+  height: 1260px; /* 60px (終日エリア) + 24 * 50px (時間エリア) = 1260px */
 }
 </style>

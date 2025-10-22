@@ -510,7 +510,7 @@ const dayLongBoxTestDays = ref([
       },
       {
         id: 2,
-        title: '☐ 年賀状作成',
+        title: '年賀状作成',
         isAllDay: true,
         startDateTime: new Date(2024, 0, 1, 0, 0),
         duration: 1,
@@ -518,6 +518,28 @@ const dayLongBoxTestDays = ref([
         color: '#4ecdc4',
         positionNumber: 2,
         isTodo: true
+      },
+      {
+        id: 4,
+        title: '会議',
+        isAllDay: false,
+        startDateTime: new Date(2024, 0, 1, 10, 0),
+        duration: 60, // 60分
+        isTodoCompleted: false,
+        color: '#95a5a6',
+        positionNumber: 1,
+        isTodo: false
+      },
+      {
+        id: 5,
+        title: 'ランチ',
+        isAllDay: false,
+        startDateTime: new Date(2024, 0, 1, 12, 0),
+        duration: 90, // 90分
+        isTodoCompleted: false,
+        color: '#f39c12',
+        positionNumber: 2,
+        isTodo: false
       }
     ]
   },
@@ -528,13 +550,35 @@ const dayLongBoxTestDays = ref([
     schedules: [
       {
         id: 3,
-        title: '☐ 買い物',
+        title: '買い物',
         isAllDay: true,
         startDateTime: new Date(2024, 0, 2, 0, 0),
         duration: 1,
         isTodoCompleted: false,
         color: '#45b7d1',
         positionNumber: 1,
+        isTodo: true
+      },
+      {
+        id: 6,
+        title: 'ジム',
+        isAllDay: false,
+        startDateTime: new Date(2024, 0, 2, 18, 0),
+        duration: 120, // 120分
+        isTodoCompleted: false,
+        color: '#27ae60',
+        positionNumber: 1,
+        isTodo: true
+      },
+      {
+        id: 7,
+        title: '読書',
+        isAllDay: false,
+        startDateTime: new Date(2024, 0, 2, 20, 30),
+        duration: 30, // 30分
+        isTodoCompleted: true,
+        color: '#8e44ad',
+        positionNumber: 2,
         isTodo: true
       }
     ]
@@ -543,7 +587,30 @@ const dayLongBoxTestDays = ref([
     date: new Date(2024, 0, 3),
     holidayNote: '',
     isCurrentMonth: true,
-    schedules: []
+    schedules: [
+      {
+        id: 8,
+        title: '朝の散歩',
+        isAllDay: false,
+        startDateTime: new Date(2024, 0, 3, 7, 0),
+        duration: 45, // 45分
+        isTodoCompleted: false,
+        color: '#16a085',
+        positionNumber: 1,
+        isTodo: true
+      },
+      {
+        id: 9,
+        title: 'プロジェクト作業',
+        isAllDay: false,
+        startDateTime: new Date(2024, 0, 3, 9, 0),
+        duration: 180, // 180分（3時間）
+        isTodoCompleted: false,
+        color: '#e74c3c',
+        positionNumber: 2,
+        isTodo: false
+      }
+    ]
   }
 ]);
 
