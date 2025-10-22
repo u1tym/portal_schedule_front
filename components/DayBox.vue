@@ -24,11 +24,13 @@ interface DayBoxProps {
   date: Date;                    // 年月日
   holidayNote?: string;          // 休日注釈
   schedules?: ScheduleInfo[];     // スケジュール情報の配列
+  isCurrentMonth?: boolean;      // 当月フラグ
 }
 
 const props = withDefaults(defineProps<DayBoxProps>(), {
   holidayNote: '',
-  schedules: () => []
+  schedules: () => [],
+  isCurrentMonth: true
 });
 
 // SVG要素の参照
@@ -80,18 +82,26 @@ const drawDayBox = () => {
   const isSunday = dayOfWeek === 0;
   const isSaturday = dayOfWeek === 6;
   const hasHolidayNote = props.holidayNote && props.holidayNote.trim() !== '';
+  const isCurrentMonth = props.isCurrentMonth;
 
   let backgroundColor = 'white';
   let textColor = '#333333';
 
+  // 当月外の場合は薄くするための透明度
+  const opacity = isCurrentMonth ? 1.0 : 0.4;
+
   if (isSunday || hasHolidayNote) {
     // 日曜日または休日注釈がある場合：薄い赤背景、赤文字
-    backgroundColor = '#ffebee';
-    textColor = '#d32f2f';
+    backgroundColor = isCurrentMonth ? '#ffebee' : '#fafafa';
+    textColor = isCurrentMonth ? '#d32f2f' : '#999999';
   } else if (isSaturday) {
     // 土曜日の場合：薄い青背景、青文字
-    backgroundColor = '#e3f2fd';
-    textColor = '#1976d2';
+    backgroundColor = isCurrentMonth ? '#e3f2fd' : '#fafafa';
+    textColor = isCurrentMonth ? '#1976d2' : '#999999';
+  } else {
+    // 平日の場合
+    backgroundColor = isCurrentMonth ? 'white' : '#fafafa';
+    textColor = isCurrentMonth ? '#333333' : '#999999';
   }
 
   // 外枠を描画
@@ -101,8 +111,9 @@ const drawDayBox = () => {
     .attr('width', width)
     .attr('height', height)
     .attr('fill', backgroundColor)
-    .attr('stroke', '#333333')
-    .attr('stroke-width', 0.25);
+    .attr('stroke', '#333333') // 枠線は常に同じ色
+    .attr('stroke-width', 0.25)
+    .attr('opacity', opacity);
 
   console.log('外枠描画完了', borderRect.node());
 
@@ -116,6 +127,7 @@ const drawDayBox = () => {
     .attr('font-size', '16px')
     .attr('font-weight', 'bold')
     .attr('fill', textColor) // 決定された文字色を使用
+    .attr('opacity', opacity) // 透明度を適用
     .text(dayText);
 
   console.log('日付描画完了', dayText, dayTextElement.node());
@@ -137,8 +149,9 @@ const drawDayBox = () => {
       .attr('y', topMargin)
       .attr('width', boxWidth)
       .attr('height', boxHeight)
-      .attr('fill', '#ff4444')
-      .attr('rx', 2);
+      .attr('fill', isCurrentMonth ? '#ff4444' : '#ffaaaa')
+      .attr('rx', 2)
+      .attr('opacity', opacity);
 
     // 白抜き文字（少し大きなフォント）
     g.append('text')
@@ -149,6 +162,7 @@ const drawDayBox = () => {
       .attr('font-size', `${fontSize}px`)
       .attr('font-weight', 'bold')
       .attr('fill', '#ffffff')
+      .attr('opacity', opacity)
       .text(props.holidayNote);
   }
 
@@ -168,9 +182,10 @@ const drawDayBox = () => {
         .attr('width', width - 14)
         .attr('height', scheduleHeight)
         .attr('fill', schedule.color || '#e3f2fd')
-        .attr('stroke', '#1976d2')
+        .attr('stroke', '#1976d2') // スケジュールの枠線も常に同じ色
         .attr('stroke-width', 1)
-        .attr('rx', 2);
+        .attr('rx', 2)
+        .attr('opacity', opacity);
 
       // スケジュールのタイトル
       g.append('text')
@@ -178,7 +193,8 @@ const drawDayBox = () => {
         .attr('y', y + 10)
         .attr('font-family', 'Arial, sans-serif')
         .attr('font-size', '9px')
-        .attr('fill', '#333333')
+        .attr('fill', isCurrentMonth ? '#333333' : '#999999')
+        .attr('opacity', opacity)
         .text(schedule.title.length > 12 ? schedule.title.substring(0, 12) + '...' : schedule.title);
 
       // TODO完了フラグの表示
@@ -187,7 +203,8 @@ const drawDayBox = () => {
           .attr('cx', width - 15)
           .attr('cy', y + 8)
           .attr('r', 4)
-          .attr('fill', '#4caf50');
+          .attr('fill', isCurrentMonth ? '#4caf50' : '#a5d6a7')
+          .attr('opacity', opacity);
       }
     });
   }

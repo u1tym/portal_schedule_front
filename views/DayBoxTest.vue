@@ -10,6 +10,7 @@
           :key="index"
           :date="day.date"
           :holiday-note="day.holidayNote"
+          :is-current-month="day.isCurrentMonth"
         />
       </div>
     </div>
@@ -22,6 +23,7 @@
           :key="index"
           :date="day.date"
           :holiday-note="day.holidayNote"
+          :is-current-month="day.isCurrentMonth"
         />
       </div>
     </div>
@@ -34,6 +36,7 @@
           :key="index"
           :date="day.date"
           :holiday-note="day.holidayNote"
+          :is-current-month="day.isCurrentMonth"
         />
       </div>
     </div>
@@ -48,6 +51,7 @@
             :key="index"
             :date="day.date"
             :holiday-note="day.holidayNote"
+            :is-current-month="day.isCurrentMonth"
           />
         </div>
         <div class="month-controls">
@@ -68,6 +72,7 @@ const basicTestDays = ref([
   {
     date: new Date(2024, 0, 1),
     holidayNote: '',
+    isCurrentMonth: true,
     schedules: [
       {
         id: 1,
@@ -83,11 +88,13 @@ const basicTestDays = ref([
   {
     date: new Date(2024, 0, 2),
     holidayNote: '',
+    isCurrentMonth: true,
     schedules: []
   },
   {
     date: new Date(2024, 0, 3),
     holidayNote: '',
+    isCurrentMonth: true,
     schedules: [
       {
         id: 2,
@@ -103,21 +110,25 @@ const basicTestDays = ref([
   {
     date: new Date(2024, 0, 4),
     holidayNote: '',
+    isCurrentMonth: true,
     schedules: []
   },
   {
     date: new Date(2024, 0, 5),
     holidayNote: '',
+    isCurrentMonth: true,
     schedules: []
   },
   {
     date: new Date(2024, 0, 6),
     holidayNote: '',
+    isCurrentMonth: true,
     schedules: []
   },
   {
     date: new Date(2024, 0, 7),
     holidayNote: '',
+    isCurrentMonth: true,
     schedules: []
   }
 ]);
@@ -127,42 +138,49 @@ const holidayTestDays = ref([
   {
     date: new Date(2024, 0, 1),
     holidayNote: '元日',
+    isCurrentMonth: true,
     schedules: []
   },
   {
     date: new Date(2024, 0, 2),
     holidayNote: '',
+    isCurrentMonth: true,
     schedules: []
   },
   {
     date: new Date(2024, 0, 3),
     holidayNote: '',
+    isCurrentMonth: true,
     schedules: []
   },
   {
     date: new Date(2024, 0, 4),
     holidayNote: '',
+    isCurrentMonth: true,
     schedules: []
   },
   {
     date: new Date(2024, 0, 5),
     holidayNote: '',
+    isCurrentMonth: true,
     schedules: []
   },
   {
     date: new Date(2024, 0, 6),
     holidayNote: '',
+    isCurrentMonth: true,
     schedules: []
   },
   {
     date: new Date(2024, 0, 7),
     holidayNote: '',
+    isCurrentMonth: true,
     schedules: []
   }
 ]);
 
 // カレンダー表示テスト用の日付データ（7×6グリッド）
-const calendarDays = ref<Array<{ date: Date; holidayNote: string; schedules: any[] }>>([]);
+const calendarDays = ref<Array<{ date: Date; holidayNote: string; isCurrentMonth: boolean; schedules: any[] }>>([]);
 
 // 月表示テスト用の状態
 const currentMonth = ref(new Date());
@@ -176,17 +194,20 @@ const currentMonthText = computed(() => {
 });
 
 // 月表示用の日付データ
-const monthDays = ref<Array<{ date: Date; holidayNote: string; schedules: any[] }>>([]);
+const monthDays = ref<Array<{ date: Date; holidayNote: string; isCurrentMonth: boolean; schedules: any[] }>>([]);
 
 // カレンダー用の日付データを生成
 const generateCalendarDays = () => {
-  const days: Array<{ date: Date; holidayNote: string; schedules: any[] }> = [];
+  const days: Array<{ date: Date; holidayNote: string; isCurrentMonth: boolean; schedules: any[] }> = [];
 
   // 7×6 = 42日分のデータを生成
   for (let i = 0; i < 42; i++) {
     const date = new Date(2024, 0, i + 1);
     let holidayNote = '';
     let schedules: any[] = [];
+
+    // 当月フラグを設定（1月の日付のみ当月）
+    const isCurrentMonth = date.getMonth() === 0;
 
     // 土日の自動判定は削除（親コンポーネントから指定されたもののみ表示）
 
@@ -210,7 +231,7 @@ const generateCalendarDays = () => {
       }];
     }
 
-    days.push({ date, holidayNote, schedules });
+    days.push({ date, holidayNote, isCurrentMonth, schedules });
   }
 
   calendarDays.value = days;
@@ -231,7 +252,7 @@ const generateMonthDays = () => {
   const dayOfWeek = firstDay.getDay();
   startDate.setDate(startDate.getDate() - dayOfWeek);
 
-  const days: Array<{ date: Date; holidayNote: string; schedules: any[] }> = [];
+  const days: Array<{ date: Date; holidayNote: string; isCurrentMonth: boolean; schedules: any[] }> = [];
 
   // 6週間分（42日）の日付を生成
   for (let i = 0; i < 42; i++) {
@@ -240,6 +261,9 @@ const generateMonthDays = () => {
 
     let holidayNote = '';
     let schedules: any[] = [];
+
+    // 当月フラグを設定（現在表示している月かどうか）
+    const isCurrentMonth = date.getMonth() === month;
 
     // 土日の自動判定は削除（親コンポーネントから指定されたもののみ表示）
 
@@ -273,7 +297,7 @@ const generateMonthDays = () => {
       }];
     }
 
-    days.push({ date, holidayNote, schedules });
+    days.push({ date, holidayNote, isCurrentMonth, schedules });
   }
 
   monthDays.value = days;
