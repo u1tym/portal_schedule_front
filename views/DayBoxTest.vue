@@ -46,6 +46,15 @@
 
     <div class="test-section">
       <h2>カレンダー表示テスト（7×6グリッド）</h2>
+      <!-- 曜日ヘッダー -->
+      <div class="calendar-header">
+        <DayBoxTitle
+          v-for="dayOfWeek in [1, 2, 3, 4, 5, 6, 0]"
+          :key="dayOfWeek"
+          :day-of-week="dayOfWeek"
+        />
+      </div>
+      <!-- カレンダーグリッド -->
       <div class="calendar-grid">
         <DayBox
           v-for="(day, index) in calendarDays"
@@ -82,6 +91,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import DayBox from '../components/DayBox.vue';
+import DayBoxTitle from '../components/DayBoxTitle.vue';
 
 // 基本テスト用の日付データ
 const basicTestDays = ref([
@@ -593,6 +603,15 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   gap: 0px; /* 間隔を0pxに設定 */
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 140px); /* 固定サイズ140pxに変更 */
+  gap: 0px; /* 間隔を0pxに設定 */
+  max-width: 980px; /* 7 * 140px = 980px */
+  margin: 0 auto;
+  margin-bottom: 5px;
 }
 
 .calendar-grid {
