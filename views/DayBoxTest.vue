@@ -29,6 +29,20 @@
     </div>
 
     <div class="test-section">
+      <h2>スケジュール表示テスト</h2>
+      <div class="test-grid">
+        <DayBox
+          v-for="(day, index) in scheduleTestDays"
+          :key="index"
+          :date="day.date"
+          :holiday-note="day.holidayNote"
+          :is-current-month="day.isCurrentMonth"
+          :schedules="day.schedules"
+        />
+      </div>
+    </div>
+
+    <div class="test-section">
       <h2>カレンダー表示テスト（7×6グリッド）</h2>
       <div class="calendar-grid">
         <DayBox
@@ -134,6 +148,212 @@ const basicTestDays = ref([
     holidayNote: '',
     isCurrentMonth: true,
     schedules: []
+  }
+]);
+
+// スケジュール表示テスト用の日付データ
+const scheduleTestDays = ref([
+  {
+    date: new Date(2024, 0, 1),
+    holidayNote: '',
+    isCurrentMonth: true,
+    schedules: [
+      {
+        id: 1,
+        title: '終日イベント（開始日）',
+        isAllDay: true,
+        startDateTime: new Date(2024, 0, 1, 0, 0),
+        duration: 3,
+        isTodoCompleted: false,
+        color: '#ff6b6b',
+        positionNumber: 1,
+        isTodo: false
+      },
+      {
+        id: 2,
+        title: '10:00 会議',
+        isAllDay: false,
+        startDateTime: new Date(2024, 0, 1, 10, 0),
+        duration: 60,
+        isTodoCompleted: false,
+        color: '#4ecdc4',
+        positionNumber: 2,
+        isTodo: false
+      },
+      {
+        id: 3,
+        title: '買い物',
+        isAllDay: false,
+        startDateTime: new Date(2024, 0, 1, 15, 30),
+        duration: 30,
+        isTodoCompleted: false,
+        color: '#45b7d1',
+        positionNumber: 3,
+        isTodo: true
+      }
+    ]
+  },
+  {
+    date: new Date(2024, 0, 2),
+    holidayNote: '',
+    isCurrentMonth: true,
+    schedules: [
+      {
+        id: 4,
+        title: '終日イベント（継続中）',
+        isAllDay: true,
+        startDateTime: new Date(2024, 0, 1, 0, 0),
+        duration: 3,
+        isTodoCompleted: false,
+        color: '#ff6b6b',
+        positionNumber: 1,
+        isTodo: false
+      },
+      {
+        id: 5,
+        title: '09:00 朝会',
+        isAllDay: false,
+        startDateTime: new Date(2024, 0, 2, 9, 0),
+        duration: 30,
+        isTodoCompleted: false,
+        color: '#96ceb4',
+        positionNumber: 2,
+        isTodo: false
+      },
+      {
+        id: 6,
+        title: 'レポート作成',
+        isAllDay: false,
+        startDateTime: new Date(2024, 0, 2, 14, 0),
+        duration: 120,
+        isTodoCompleted: true,
+        color: '#feca57',
+        positionNumber: 3,
+        isTodo: true
+      }
+    ]
+  },
+  {
+    date: new Date(2024, 0, 3),
+    holidayNote: '',
+    isCurrentMonth: true,
+    schedules: [
+      {
+        id: 7,
+        title: '終日イベント（終了日）',
+        isAllDay: true,
+        startDateTime: new Date(2024, 0, 1, 0, 0),
+        duration: 2,
+        isTodoCompleted: false,
+        color: '#ff6b6b',
+        positionNumber: 1,
+        isTodo: false
+      },
+      {
+        id: 8,
+        title: '11:00 プレゼン',
+        isAllDay: false,
+        startDateTime: new Date(2024, 0, 3, 11, 0),
+        duration: 90,
+        isTodoCompleted: false,
+        color: '#ff9ff3',
+        positionNumber: 2,
+        isTodo: false
+      }
+    ]
+  },
+  {
+    date: new Date(2024, 0, 4),
+    holidayNote: '',
+    isCurrentMonth: true,
+    schedules: [
+      {
+        id: 9,
+        title: '別月の終日イベント（継続中）',
+        isAllDay: true,
+        startDateTime: new Date(2023, 11, 30, 0, 0),
+        duration: 5,
+        isTodoCompleted: false,
+        color: '#a8e6cf',
+        positionNumber: 1,
+        isTodo: false
+      },
+      {
+        id: 10,
+        title: '08:30 朝食',
+        isAllDay: false,
+        startDateTime: new Date(2024, 0, 4, 8, 30),
+        duration: 30,
+        isTodoCompleted: false,
+        color: '#ffd3a5',
+        positionNumber: 2,
+        isTodo: false
+      },
+      {
+        id: 11,
+        title: '☐ ジム',
+        isAllDay: false,
+        startDateTime: new Date(2024, 0, 4, 18, 0),
+        duration: 60,
+        isTodoCompleted: false,
+        color: '#fd79a8',
+        positionNumber: 3,
+        isTodo: true
+      }
+    ]
+  },
+  {
+    date: new Date(2024, 0, 5),
+    holidayNote: '',
+    isCurrentMonth: true,
+    schedules: [
+      {
+        id: 12,
+        title: '別月の終日イベント（終了日）',
+        isAllDay: true,
+        startDateTime: new Date(2023, 11, 30, 0, 0),
+        duration: 6,
+        isTodoCompleted: false,
+        color: '#a8e6cf',
+        positionNumber: 1,
+        isTodo: false
+      }
+    ]
+  },
+  {
+    date: new Date(2024, 0, 6),
+    holidayNote: '',
+    isCurrentMonth: true,
+    schedules: []
+  },
+  {
+    date: new Date(2024, 0, 7),
+    holidayNote: '',
+    isCurrentMonth: true,
+    schedules: [
+      {
+        id: 13,
+        title: '13:00 ランチ',
+        isAllDay: false,
+        startDateTime: new Date(2024, 0, 7, 13, 0),
+        duration: 60,
+        isTodoCompleted: false,
+        color: '#74b9ff',
+        positionNumber: 1,
+        isTodo: false
+      },
+      {
+        id: 14,
+        title: '☐ 読書',
+        isAllDay: false,
+        startDateTime: new Date(2024, 0, 7, 20, 0),
+        duration: 30,
+        isTodoCompleted: true,
+        color: '#fd79a8',
+        positionNumber: 2,
+        isTodo: true
+      }
+    ]
   }
 ]);
 

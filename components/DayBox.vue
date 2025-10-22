@@ -74,6 +74,35 @@ const drawDayBox = () => {
 
   console.log('SVGサイズ設定完了', width, height);
 
+  // 矢印マーカーの定義
+  const defs = d3.select(svgElement).append('defs');
+
+  // 右向き矢印
+  defs.append('marker')
+    .attr('id', 'arrowhead')
+    .attr('viewBox', '0 0 10 10')
+    .attr('refX', 9)
+    .attr('refY', 3)
+    .attr('markerWidth', 6)
+    .attr('markerHeight', 6)
+    .attr('orient', 'auto')
+    .append('path')
+    .attr('d', 'M0,0 L0,6 L9,3 z')
+    .attr('fill', '#333333');
+
+  // 左向き矢印
+  defs.append('marker')
+    .attr('id', 'arrowhead-left')
+    .attr('viewBox', '0 0 10 10')
+    .attr('refX', 1)
+    .attr('refY', 3)
+    .attr('markerWidth', 6)
+    .attr('markerHeight', 6)
+    .attr('orient', 'auto')
+    .append('path')
+    .attr('d', 'M9,0 L9,6 L0,3 z')
+    .attr('fill', '#333333');
+
   // メイングループ
   const g = d3.select(svgElement)
     .append('g')
@@ -177,40 +206,144 @@ const drawDayBox = () => {
     // positionNumberでソートしてから表示
     const sortedSchedules = [...props.schedules].sort((a, b) => a.positionNumber - b.positionNumber);
 
+    // 連番でない場合の間隔を計算
+    let currentY = scheduleStartY;
+
     sortedSchedules.slice(0, maxSchedules).forEach((schedule, index) => {
-      const y = scheduleStartY + index * (scheduleHeight + 2);
-
-      // スケジュールの背景
-      g.append('rect')
-        .attr('x', 5)
-        .attr('y', y)
-        .attr('width', width - 14)
-        .attr('height', scheduleHeight)
-        .attr('fill', schedule.color || '#e3f2fd')
-        .attr('stroke', '#1976d2') // スケジュールの枠線も常に同じ色
-        .attr('stroke-width', 1)
-        .attr('rx', 2)
-        .attr('opacity', opacity);
-
-      // スケジュールのタイトル
-      g.append('text')
-        .attr('x', 8)
-        .attr('y', y + 10)
-        .attr('font-family', 'Arial, sans-serif')
-        .attr('font-size', '9px')
-        .attr('fill', isCurrentMonth ? '#333333' : '#999999')
-        .attr('opacity', opacity)
-        .text(schedule.title.length > 12 ? schedule.title.substring(0, 12) + '...' : schedule.title);
-
-      // TODO完了フラグの表示
-      if (schedule.isTodoCompleted) {
-        g.append('circle')
-          .attr('cx', width - 15)
-          .attr('cy', y + 8)
-          .attr('r', 4)
-          .attr('fill', isCurrentMonth ? '#4caf50' : '#a5d6a7')
-          .attr('opacity', opacity);
+      // 前のスケジュールとの間隔を計算（positionNumberの差に基づく）
+      if (index > 0) {
+        const prevSchedule = sortedSchedules[index - 1];
+        const positionDiff = schedule.positionNumber - prevSchedule.positionNumber;
+        if (positionDiff > 1) {
+          // 番号が空いている場合は間隔を開ける
+          currentY += (positionDiff - 1) * (scheduleHeight + 2);
+        }
       }
+
+      const y = currentY;
+
+      // isAllDayがTrueの場合の処理
+      if (schedule.isAllDay) {
+        const scheduleDate = new Date(schedule.startDateTime);
+        const boxDate = props.date;
+
+               // 年月が異なる場合
+               if (scheduleDate.getFullYear() !== boxDate.getFullYear() ||
+                   scheduleDate.getMonth() !== boxDate.getMonth()) {
+
+                 // 年月が異なる場合：横線のみ（タイトルなし）
+                 g.append('line')
+                   .attr('x1', 8)
+                   .attr('y1', y + scheduleHeight / 2 + 4)
+                   .attr('x2', width - 8)
+                   .attr('y2', y + scheduleHeight / 2 + 4)
+                   .attr('stroke', schedule.color)
+                   .attr('stroke-width', 2)
+                   .attr('opacity', opacity);
+               } else {
+                 // 年月が同じ場合：横線 + タイトル（開始日のみ）
+                 g.append('line')
+                   .attr('x1', 8)
+                   .attr('y1', y + scheduleHeight / 2 + 4)
+                   .attr('x2', width - 8)
+                   .attr('y2', y + scheduleHeight / 2 + 4)
+                   .attr('stroke', schedule.color)
+                   .attr('stroke-width', 2)
+                   .attr('opacity', opacity);
+
+                 // 開始日のみタイトルを表示（日付が同じ場合）
+                 if (scheduleDate.getDate() === boxDate.getDate()) {
+                   g.append('text')
+                     .attr('x', 8)
+                     .attr('y', y + 10)
+                     .attr('font-family', 'Arial, sans-serif')
+                     .attr('font-size', '9px')
+                     .attr('fill', schedule.color)
+                     .attr('opacity', opacity)
+                     .text(schedule.title.length > 12 ? schedule.title.substring(0, 12) + '...' : schedule.title);
+                 }
+               }
+      } else {
+        // isAllDayがFalseの場合
+        let textContent = '';
+
+               // 背景色のグラデーション
+               const gradientId = `gradient-${schedule.id}`;
+               const gradient = g.append('defs')
+                 .append('linearGradient')
+                 .attr('id', gradientId)
+                 .attr('x1', '0%')
+                 .attr('x2', '100%');
+
+               gradient.append('stop')
+                 .attr('offset', '0%')
+                 .attr('stop-color', schedule.color)
+                 .attr('stop-opacity', 0.8);
+
+               gradient.append('stop')
+                 .attr('offset', '100%')
+                 .attr('stop-color', schedule.color)
+                 .attr('stop-opacity', 0.3);
+
+               // 背景
+               g.append('rect')
+                 .attr('x', 5)
+                 .attr('y', y)
+                 .attr('width', width - 14)
+                 .attr('height', scheduleHeight)
+                 .attr('fill', `url(#${gradientId})`)
+                 .attr('rx', 2)
+                 .attr('opacity', opacity);
+
+               // チェックボックスの表示
+               if (schedule.isTodo) {
+                 const checkboxText = schedule.isTodoCompleted ? '☑' : '☐';
+                 g.append('text')
+                   .attr('x', 8)
+                   .attr('y', y + 10)
+                   .attr('font-family', 'Arial, sans-serif')
+                   .attr('font-size', '12px') // チェックボックスを大きく
+                   .attr('fill', '#333333')
+                   .attr('opacity', opacity)
+                   .text(checkboxText);
+               }
+
+               // 時分の表示
+               const timeStr = schedule.startDateTime.toLocaleTimeString('ja-JP', {
+                 hour: '2-digit',
+                 minute: '2-digit',
+                 hour12: false
+               });
+
+               const timeX = schedule.isTodo ? 20 : 8; // チェックボックスがある場合は右にずらす
+               g.append('text')
+                 .attr('x', timeX)
+                 .attr('y', y + 10)
+                 .attr('font-family', 'Arial, sans-serif')
+                 .attr('font-size', '9px')
+                 .attr('fill', '#333333')
+                 .attr('opacity', opacity)
+                 .text(timeStr);
+
+               // タイトルの表示
+               const titleX = timeX + timeStr.length * 5.5 + 2; // 時分の後にスペース
+               const titleElement = g.append('text')
+                 .attr('x', titleX)
+                 .attr('y', y + 10)
+                 .attr('font-family', 'Arial, sans-serif')
+                 .attr('font-size', '9px')
+                 .attr('fill', '#333333')
+                 .attr('opacity', opacity);
+
+               // 取り消し線の処理（タイトルのみ）
+               if (schedule.isTodoCompleted) {
+                 titleElement.attr('text-decoration', 'line-through');
+               }
+
+               titleElement.text(schedule.title.length > 15 ? schedule.title.substring(0, 15) + '...' : schedule.title);
+      }
+
+      currentY += scheduleHeight + 2;
     });
   }
 
