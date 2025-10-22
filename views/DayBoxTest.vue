@@ -38,6 +38,8 @@
           :holiday-note="day.holidayNote"
           :is-current-month="day.isCurrentMonth"
           :schedules="day.schedules"
+          @schedule-click="editSchedule"
+          @date-click="addSchedule"
         />
       </div>
     </div>
@@ -461,6 +463,16 @@ const generateCalendarDays = () => {
   }
 
   calendarDays.value = days;
+};
+
+// スケジュール編集メソッド
+const editSchedule = (scheduleId: number) => {
+  alert(`スケジュールID: ${scheduleId} がクリックされました`);
+};
+
+// スケジュール追加メソッド
+const addSchedule = (year: number, month: number, day: number) => {
+  alert(`${year}年${month}月${day}日に新しいスケジュールを追加します`);
 };
 
 // 月表示用の日付データを生成

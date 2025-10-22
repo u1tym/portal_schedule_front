@@ -29,6 +29,12 @@ interface DayBoxProps {
   isCurrentMonth?: boolean;      // 当月フラグ
 }
 
+// Emits定義
+const emit = defineEmits<{
+  scheduleClick: [scheduleId: number]
+  dateClick: [year: number, month: number, day: number]
+}>();
+
 const props = withDefaults(defineProps<DayBoxProps>(), {
   holidayNote: '',
   schedules: () => [],
@@ -135,16 +141,27 @@ const drawDayBox = () => {
     textColor = isCurrentMonth ? '#333333' : '#999999';
   }
 
-  // 外枠を描画
-  const borderRect = g.append('rect')
-    .attr('x', 0)
-    .attr('y', 0)
-    .attr('width', width)
-    .attr('height', height)
-    .attr('fill', backgroundColor)
-    .attr('stroke', '#333333') // 枠線は常に同じ色
-    .attr('stroke-width', 0.25)
-    .attr('opacity', opacity);
+         // 外枠を描画
+         const borderRect = g.append('rect')
+           .attr('x', 0)
+           .attr('y', 0)
+           .attr('width', width)
+           .attr('height', height)
+           .attr('fill', backgroundColor)
+           .attr('stroke', '#333333') // 枠線は常に同じ色
+           .attr('stroke-width', 0.25)
+           .attr('opacity', opacity)
+           .style('cursor', 'pointer')
+           .on('click', (event) => {
+             // スケジュール部分以外のクリックを検出
+             const target = event.target as SVGElement;
+             if (target === borderRect.node()) {
+               const year = props.date.getFullYear();
+               const month = props.date.getMonth() + 1; // 0ベースなので+1
+               const day = props.date.getDate();
+               emit('dateClick', year, month, day);
+             }
+           });
 
   console.log('外枠描画完了', borderRect.node());
 
@@ -240,6 +257,19 @@ const drawDayBox = () => {
                    .attr('stroke', schedule.color)
                    .attr('stroke-width', 2)
                    .attr('opacity', opacity);
+
+                 // 透明なクリック可能エリア（終日イベント表示エリア全体を覆う）- 最後に描画して一番上に配置
+                 g.append('rect')
+                   .attr('x', 8)
+                   .attr('y', y)
+                   .attr('width', width - 16)
+                   .attr('height', scheduleHeight)
+                   .attr('fill', 'transparent')
+                   .attr('rx', 2)
+                   .style('cursor', 'pointer')
+                   .on('click', () => {
+                     emit('scheduleClick', schedule.id);
+                   });
                } else {
                  // 年月が同じ場合：横線 + タイトル（開始日のみ）
                  g.append('line')
@@ -262,6 +292,19 @@ const drawDayBox = () => {
                      .attr('opacity', opacity)
                      .text(schedule.title.length > 12 ? schedule.title.substring(0, 12) + '...' : schedule.title);
                  }
+
+                 // 透明なクリック可能エリア（終日イベント表示エリア全体を覆う）- 最後に描画して一番上に配置
+                 g.append('rect')
+                   .attr('x', 8)
+                   .attr('y', y)
+                   .attr('width', width - 16)
+                   .attr('height', scheduleHeight)
+                   .attr('fill', 'transparent')
+                   .attr('rx', 2)
+                   .style('cursor', 'pointer')
+                   .on('click', () => {
+                     emit('scheduleClick', schedule.id);
+                   });
                }
       } else {
         // isAllDayがFalseの場合
@@ -341,11 +384,24 @@ const drawDayBox = () => {
                }
 
                titleElement.text(schedule.title.length > 15 ? schedule.title.substring(0, 15) + '...' : schedule.title);
-      }
 
-      currentY += scheduleHeight + 2;
-    });
-  }
+               // 透明なクリック可能エリア（スケジュール表示エリア全体を覆う）- 最後に描画して一番上に配置
+               g.append('rect')
+                 .attr('x', 5)
+                 .attr('y', y)
+                 .attr('width', width - 14)
+                 .attr('height', scheduleHeight)
+                 .attr('fill', 'transparent')
+                 .attr('rx', 2)
+                 .style('cursor', 'pointer')
+                 .on('click', () => {
+                   emit('scheduleClick', schedule.id);
+                 });
+             }
+
+             currentY += scheduleHeight + 2;
+           });
+         }
 
   console.log('DayBox描画完了', svgElement.innerHTML);
 };
