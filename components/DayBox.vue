@@ -300,9 +300,9 @@ const drawDayBox = () => {
                  const checkboxText = schedule.isTodoCompleted ? '☑' : '☐';
                  g.append('text')
                    .attr('x', 8)
-                   .attr('y', y + 10)
+                   .attr('y', y + 12) // y + 10 → y + 12 に変更
                    .attr('font-family', 'Arial, sans-serif')
-                   .attr('font-size', '12px') // チェックボックスを大きく
+                   .attr('font-size', '14px') // 12px → 14px に変更
                    .attr('fill', '#333333')
                    .attr('opacity', opacity)
                    .text(checkboxText);
@@ -315,7 +315,7 @@ const drawDayBox = () => {
                  hour12: false
                });
 
-               const timeX = schedule.isTodo ? 20 : 8; // チェックボックスがある場合は右にずらす
+               const timeX = schedule.isTodo ? 24 : 8; // チェックボックスがある場合は右にずらす（20 → 24に変更）
                g.append('text')
                  .attr('x', timeX)
                  .attr('y', y + 10)
