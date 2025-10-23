@@ -35,6 +35,11 @@ const props = withDefaults(defineProps<DayLongBoxProps>(), {
   isCurrentMonth: true
 });
 
+const emit = defineEmits<{
+  scheduleClick: [scheduleId: number],
+  timeClick: [year: number, month: number, day: number, hour: number, minute: number]
+}>();
+
 // SVG要素の参照
 const svgRef = ref<SVGSVGElement | null>(null);
 
@@ -298,6 +303,32 @@ const drawDayLongBox = () => {
       .attr('stroke', '#cccccc')
       .attr('stroke-width', 0.5)
       .attr('opacity', opacity);
+
+    // 時間線のクリック可能領域（30分単位で時刻を算出）
+    g.append('rect')
+      .attr('x', 5)
+      .attr('y', y) // 時間線の位置から開始
+      .attr('width', width - 10)
+      .attr('height', hourHeight) // 次の時間線まで
+      .attr('fill', 'transparent')
+      .style('cursor', 'pointer')
+      .on('click', (event) => {
+        const rect = event.target as SVGRectElement;
+        const rectY = parseFloat(rect.getAttribute('y') || '0');
+        const relativeY = event.offsetY - rectY;
+
+        // 30分単位で時刻を算出（修正版）
+        // relativeYは0からhourHeightの範囲
+        const halfHour = Math.floor(relativeY / (hourHeight / 2));
+        const minute = Math.min(halfHour * 30, 30); // 最大30分に制限
+
+        const year = props.date.getFullYear();
+        const month = props.date.getMonth() + 1;
+        const day = props.date.getDate();
+
+        console.log(`クリック位置: relativeY=${relativeY}, halfHour=${halfHour}, minute=${minute}, hour=${hour}`);
+        emit('timeClick', year, month, day, hour, minute);
+      });
   }
 
   // 終日ではないスケジュールを描画

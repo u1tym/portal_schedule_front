@@ -89,14 +89,16 @@
     <div class="test-section">
       <h2>DayLongBoxテスト（3日分）</h2>
       <div class="day-long-box-grid">
-        <DayLongBox
-          v-for="(day, index) in dayLongBoxTestDays"
-          :key="index"
-          :date="day.date"
-          :holiday-note="day.holidayNote"
-          :is-current-month="day.isCurrentMonth"
-          :schedules="day.schedules"
-        />
+            <DayLongBox
+              v-for="(day, index) in dayLongBoxTestDays"
+              :key="index"
+              :date="day.date"
+              :holiday-note="day.holidayNote"
+              :is-current-month="day.isCurrentMonth"
+              :schedules="day.schedules"
+              @schedule-click="editSchedule"
+              @time-click="addSchedule"
+            />
       </div>
     </div>
   </div>
@@ -620,8 +622,12 @@ const editSchedule = (scheduleId: number) => {
 };
 
 // スケジュール追加メソッド
-const addSchedule = (year: number, month: number, day: number) => {
-  alert(`${year}年${month}月${day}日に新しいスケジュールを追加します`);
+const addSchedule = (year: number, month: number, day: number, hour?: number, minute?: number) => {
+  if (hour !== undefined && minute !== undefined) {
+    alert(`${year}年${month}月${day}日 ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}に新しいスケジュールを追加します`);
+  } else {
+    alert(`${year}年${month}月${day}日に新しいスケジュールを追加します`);
+  }
 };
 
 // 月表示用の日付データを生成
