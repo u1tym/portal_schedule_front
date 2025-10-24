@@ -1,233 +1,146 @@
 <template>
   <div class="schedule-view">
-    <h1>スケジュール管理</h1>
-
-    <!-- コントロールパネル -->
-    <div class="control-panel">
-      <div class="navigation-buttons">
-        <button @click="goPrevious" class="nav-button">前へ</button>
-        <button @click="goNext" class="nav-button">次へ</button>
-      </div>
-
-      <div class="display-controls">
-        <button @click="toggleDisplayMode" class="mode-button">
-          表示切替
-        </button>
-      </div>
-
-      <div class="display-info">
-        <div class="info-item">
-          <label>表示モード:</label>
-          <span>{{ displayModeText }}</span>
-        </div>
-        <div class="info-item">
-          <label>表示開始:</label>
-          <span>{{ formatDate(displayStartDate) }}</span>
-        </div>
-        <div class="info-item">
-          <label>表示終了:</label>
-          <span>{{ formatDate(displayEndDate) }}</span>
-        </div>
-      </div>
+    <!-- ヘッダー -->
+    <div class="schedule-header">
+      <h1>スケジュール管理</h1>
+      <button @click="goToMenu" class="menu-button">メニューに戻る</button>
     </div>
 
+    <!-- タブ -->
+    <div class="schedule-tabs">
+      <button
+        :class="{ active: currentView === 'monthly' }"
+        @click="switchView('monthly')"
+        class="tab-button"
+      >
+        月表示
+      </button>
+      <button
+        :class="{ active: currentView === 'weekly' }"
+        @click="switchView('weekly')"
+        class="tab-button"
+      >
+        週間表示
+      </button>
+    </div>
+
+    <!-- コンテンツ -->
     <div v-if="isLoading" class="loading">
-      スケジュールを取得中...
+      スケジュールを読み込み中...
     </div>
 
-    <div v-if="errorMessage" class="error-message">
+    <div v-if="errorMessage" class="error">
       {{ errorMessage }}
     </div>
 
-    <div v-if="scheduleData" class="schedule-info">
-      <p>スケジュール取得完了</p>
-      <p>セッション: {{ scheduleData.session_string }}</p>
-      <p>スケジュール数: {{ scheduleData.schedules?.length || 0 }}</p>
-    </div>
+    <!-- 月表示 -->
+    <ScheduleMonthlyView
+      v-if="currentView === 'monthly' && scheduleData"
+      :display-target-date="displayTargetDate"
+      :display-start-date="displayStartDate"
+      :display-end-date="displayEndDate"
+      :display-mode="displayMode"
+      :is-monday-start="isMondayStart"
+      :schedules="scheduleData.schedules"
+      @previous="handlePrevious"
+      @next="handleNext"
+      @edit-schedule="handleEditSchedule"
+      @add-schedule="handleAddSchedule"
+      @sunday-start="handleSundayStart"
+      @monday-start="handleMondayStart"
+    />
+
+    <!-- 週間表示 -->
+    <ScheduleWeekly
+      v-if="currentView === 'weekly' && scheduleData"
+      :display-target-date="displayTargetDate"
+      :display-start-date="displayStartDate"
+      :display-end-date="displayEndDate"
+      :schedules="scheduleData.schedules"
+      @previous="handlePrevious"
+      @next="handleNext"
+      @edit-schedule="handleEditSchedule"
+      @add-schedule="handleAddSchedule"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { ScheduleService } from '../services/api';
+import { ScheduleItem } from '../types/schedule';
+import ScheduleMonthlyView from '../components/ScheduleMonthlyView.vue';
+import ScheduleWeekly from '../components/ScheduleWeekly.vue';
 
-// 表示モードの定義
 enum DisplayMode {
-  SUNDAY_START_MONTH = 'sunday_start_month',
-  MONDAY_START_MONTH = 'monday_start_month',
-  THREE_DAY_WEEK = 'three_day_week'
+  Monthly = '月表示',
+  ThreeDayWeek = '週３日表示',
 }
+
+const router = useRouter();
 
 // 状態管理
 const isLoading = ref(false);
 const errorMessage = ref('');
-const scheduleData = ref<{ session_string: string; schedules: any[] } | null>(null);
+const scheduleData = ref<{ session_string: string; schedules: ScheduleItem[] } | null>(null);
+const currentView = ref<'monthly' | 'weekly'>('monthly');
 
-// 表示関連の状態
-const targetDate = ref(new Date()); // 表示対象年月日
-const displayMode = ref<DisplayMode>(DisplayMode.SUNDAY_START_MONTH); // 表示モード
-const displayStartDate = ref<Date>(new Date()); // 表示開始年月日
-const displayEndDate = ref<Date>(new Date()); // 表示終了年月日
+// 表示制御
+const displayMode = ref<DisplayMode>(DisplayMode.Monthly);
+const isMondayStart = ref(false); // 月曜始まりフラグ
+const displayTargetDate = ref(new Date());
 
-// 表示モードのテキスト
-const displayModeText = computed(() => {
-  switch (displayMode.value) {
-    case DisplayMode.SUNDAY_START_MONTH:
-      return '日曜始まり月表示';
-    case DisplayMode.MONDAY_START_MONTH:
-      return '月曜始まり月表示';
-    case DisplayMode.THREE_DAY_WEEK:
-      return '週３日表示';
-    default:
-      return '不明';
+// 表示開始・終了日時の計算
+const displayStartDate = computed(() => {
+  const target = displayTargetDate.value;
+  const year = target.getFullYear();
+  const month = target.getMonth();
+
+  if (displayMode.value === DisplayMode.Monthly) {
+    const firstDay = new Date(year, month, 1);
+    const dayOfWeek = firstDay.getDay();
+    const startDate = new Date(firstDay);
+
+    if (isMondayStart.value) {
+      // 月曜始まり
+      startDate.setDate(startDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    } else {
+      // 日曜始まり
+      startDate.setDate(startDate.getDate() - dayOfWeek);
+    }
+    return startDate;
+  } else {
+    // 週3日表示
+    return new Date(target);
   }
 });
 
-// 日付フォーマット関数
-const formatDate = (date: Date): string => {
-  return date.toLocaleDateString('ja-JP', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
-};
+const displayEndDate = computed(() => {
+  const target = displayTargetDate.value;
+  const year = target.getFullYear();
+  const month = target.getMonth();
 
-// 表示開始年月日算出
-const calculateDisplayStartDate = (): Date => {
-  const target = new Date(targetDate.value);
+  if (displayMode.value === DisplayMode.Monthly) {
+    const lastDay = new Date(year, month + 1, 0);
+    const dayOfWeek = lastDay.getDay();
+    const endDate = new Date(lastDay);
 
-  switch (displayMode.value) {
-    case DisplayMode.SUNDAY_START_MONTH:
-      // 1日が日曜ならその日、そうでなければ過去の直近の日曜日
-      const firstDay = new Date(target.getFullYear(), target.getMonth(), 1);
-      const dayOfWeek = firstDay.getDay();
-      const daysToSubtract = dayOfWeek === 0 ? 0 : dayOfWeek;
-      return new Date(firstDay.getTime() - daysToSubtract * 24 * 60 * 60 * 1000);
-
-    case DisplayMode.MONDAY_START_MONTH:
-      // 1日が月曜ならその日、そうでなければ過去の直近の月曜日
-      const firstDayMon = new Date(target.getFullYear(), target.getMonth(), 1);
-      const dayOfWeekMon = firstDayMon.getDay();
-      const daysToSubtractMon = dayOfWeekMon === 0 ? 6 : dayOfWeekMon - 1;
-      return new Date(firstDayMon.getTime() - daysToSubtractMon * 24 * 60 * 60 * 1000);
-
-    case DisplayMode.THREE_DAY_WEEK:
-      // 表示対象年月日
-      return new Date(targetDate.value);
-
-    default:
-      return new Date(targetDate.value);
+    if (isMondayStart.value) {
+      // 月曜始まり
+      endDate.setDate(endDate.getDate() + (dayOfWeek === 0 ? 0 : 7 - dayOfWeek));
+    } else {
+      // 日曜始まり
+      endDate.setDate(endDate.getDate() + (6 - dayOfWeek));
+    }
+    return endDate;
+  } else {
+    // 週3日表示
+    const endDate = new Date(target);
+    endDate.setDate(endDate.getDate() + 2);
+    return endDate;
   }
-};
-
-// 表示終了年月日算出
-const calculateDisplayEndDate = (): Date => {
-  const target = new Date(targetDate.value);
-
-  switch (displayMode.value) {
-    case DisplayMode.SUNDAY_START_MONTH:
-      // 月末が土曜ならその日、そうでなければその後の直近の土曜日
-      const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0);
-      const dayOfWeekLast = lastDay.getDay();
-      const daysToAdd = dayOfWeekLast === 6 ? 0 : 6 - dayOfWeekLast;
-      return new Date(lastDay.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
-
-    case DisplayMode.MONDAY_START_MONTH:
-      // 月末が日曜ならその日、そうでなければその後の直近の日曜日
-      const lastDayMon = new Date(target.getFullYear(), target.getMonth() + 1, 0);
-      const dayOfWeekLastMon = lastDayMon.getDay();
-      const daysToAddMon = dayOfWeekLastMon === 0 ? 0 : 7 - dayOfWeekLastMon;
-      return new Date(lastDayMon.getTime() + daysToAddMon * 24 * 60 * 60 * 1000);
-
-    case DisplayMode.THREE_DAY_WEEK:
-      // 表示対象年月日 + 2日
-      const endDate = new Date(targetDate.value);
-      endDate.setDate(endDate.getDate() + 2);
-      return endDate;
-
-    default:
-      return new Date(targetDate.value);
-  }
-};
-
-// 表示日付の更新
-const updateDisplayDates = () => {
-  displayStartDate.value = calculateDisplayStartDate();
-  displayEndDate.value = calculateDisplayEndDate();
-};
-
-// 前へボタン押下時
-const goPrevious = () => {
-  const target = new Date(targetDate.value);
-
-  switch (displayMode.value) {
-    case DisplayMode.SUNDAY_START_MONTH:
-    case DisplayMode.MONDAY_START_MONTH:
-      // 1か月前の同日、同日が存在しない場合は末日
-      const prevMonth = new Date(target.getFullYear(), target.getMonth() - 1, target.getDate());
-      if (prevMonth.getMonth() !== target.getMonth() - 1) {
-        // 同日が存在しない場合、前月の末日
-        const lastDayOfPrevMonth = new Date(target.getFullYear(), target.getMonth(), 0);
-        targetDate.value = lastDayOfPrevMonth;
-      } else {
-        targetDate.value = prevMonth;
-      }
-      break;
-
-    case DisplayMode.THREE_DAY_WEEK:
-      // 3日前
-      target.setDate(target.getDate() - 3);
-      targetDate.value = target;
-      break;
-  }
-
-  updateDisplayDates();
-};
-
-// 次へボタン押下時
-const goNext = () => {
-  const target = new Date(targetDate.value);
-
-  switch (displayMode.value) {
-    case DisplayMode.SUNDAY_START_MONTH:
-    case DisplayMode.MONDAY_START_MONTH:
-      // 1か月後の同日、同日が存在しない場合は末日
-      const nextMonth = new Date(target.getFullYear(), target.getMonth() + 1, target.getDate());
-      if (nextMonth.getMonth() !== target.getMonth() + 1) {
-        // 同日が存在しない場合、翌月の末日
-        const lastDayOfNextMonth = new Date(target.getFullYear(), target.getMonth() + 2, 0);
-        targetDate.value = lastDayOfNextMonth;
-      } else {
-        targetDate.value = nextMonth;
-      }
-      break;
-
-    case DisplayMode.THREE_DAY_WEEK:
-      // 3日後
-      target.setDate(target.getDate() + 3);
-      targetDate.value = target;
-      break;
-  }
-
-  updateDisplayDates();
-};
-
-// 表示切替ボタン
-const toggleDisplayMode = () => {
-  switch (displayMode.value) {
-    case DisplayMode.SUNDAY_START_MONTH:
-      displayMode.value = DisplayMode.MONDAY_START_MONTH;
-      break;
-    case DisplayMode.MONDAY_START_MONTH:
-      displayMode.value = DisplayMode.THREE_DAY_WEEK;
-      break;
-    case DisplayMode.THREE_DAY_WEEK:
-      displayMode.value = DisplayMode.SUNDAY_START_MONTH;
-      break;
-  }
-
-  updateDisplayDates();
-};
+});
 
 // スケジュール取得
 const getSchedule = async () => {
@@ -235,7 +148,6 @@ const getSchedule = async () => {
   errorMessage.value = '';
 
   try {
-    // セッションストレージからユーザー名とセッション文字列を取得
     const username = sessionStorage.getItem('username');
     const sessionString = sessionStorage.getItem('session_string');
 
@@ -247,14 +159,12 @@ const getSchedule = async () => {
       throw new Error('セッションが見つかりません');
     }
 
-    // スケジュール取得要求
     const response = await ScheduleService.getSchedule({
       username: username,
       session_string: sessionString
     });
 
     if (response.success) {
-      // 新しいセッション文字列を保持
       scheduleData.value = {
         session_string: response.session_string,
         schedules: response.schedules
@@ -263,7 +173,6 @@ const getSchedule = async () => {
     } else {
       throw new Error('スケジュール取得に失敗しました');
     }
-
   } catch (error) {
     const message = error instanceof Error ? error.message : 'スケジュール取得に失敗しました';
     errorMessage.value = message;
@@ -272,141 +181,150 @@ const getSchedule = async () => {
   }
 };
 
-// 初期化
-onMounted(() => {
-  // デフォルト値の設定
-  targetDate.value = new Date(); // 現在月
-  displayMode.value = DisplayMode.SUNDAY_START_MONTH; // 日曜始まり月表示
-  updateDisplayDates(); // 表示日付の初期化
+// イベントハンドラー
+const goToMenu = () => {
+  router.push('/user');
+};
 
+const switchView = (view: 'monthly' | 'weekly') => {
+  currentView.value = view;
+
+  // タブ選択時に表示モードを設定
+  if (view === 'monthly') {
+    displayMode.value = DisplayMode.Monthly;
+  } else {
+    displayMode.value = DisplayMode.ThreeDayWeek;
+  }
+};
+
+const handlePrevious = () => {
+  if (displayMode.value === DisplayMode.ThreeDayWeek) {
+    // 週3日表示の場合：3日前にする
+    displayTargetDate.value = new Date(displayTargetDate.value.getTime() - 3 * 24 * 60 * 60 * 1000);
+  } else {
+    // 月表示の場合：1か月前の同日にする。同日が存在しない場合は1か月前の末日にする
+    const target = displayTargetDate.value;
+    const newDate = new Date(target.getFullYear(), target.getMonth() - 1, target.getDate());
+    if (newDate.getDate() !== target.getDate()) {
+      // 同日が存在しない場合、1か月前の末日にする
+      newDate.setDate(0);
+    }
+    displayTargetDate.value = newDate;
+  }
+};
+
+const handleNext = () => {
+  if (displayMode.value === DisplayMode.ThreeDayWeek) {
+    // 週3日表示の場合：3日後にする
+    displayTargetDate.value = new Date(displayTargetDate.value.getTime() + 3 * 24 * 60 * 60 * 1000);
+  } else {
+    // 月表示の場合：1か月後の同日にする。同日が存在しない場合は1か月後の末日にする
+    const target = displayTargetDate.value;
+    const newDate = new Date(target.getFullYear(), target.getMonth() + 1, target.getDate());
+    if (newDate.getDate() !== target.getDate()) {
+      // 同日が存在しない場合、1か月後の末日にする
+      newDate.setDate(0);
+    }
+    displayTargetDate.value = newDate;
+  }
+};
+
+const handleEditSchedule = (scheduleId: number) => {
+  alert(`スケジュールID: ${scheduleId} を編集します`);
+};
+
+const handleAddSchedule = (year: number, month: number, day: number, hour?: number, minute?: number) => {
+  if (hour !== undefined && minute !== undefined) {
+    alert(`${year}年${month}月${day}日 ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}に新しいスケジュールを追加します`);
+  } else {
+    alert(`${year}年${month}月${day}日に新しいスケジュールを追加します`);
+  }
+};
+
+const handleSundayStart = () => {
+  isMondayStart.value = false;
+};
+
+const handleMondayStart = () => {
+  isMondayStart.value = true;
+};
+
+onMounted(() => {
   getSchedule();
 });
 </script>
 
 <style scoped>
 .schedule-view {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background-color: #f0f2f5;
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 20px;
 }
 
-h1 {
-  color: #333;
-  font-size: 2.5rem;
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.control-panel {
-  background-color: white;
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 800px;
-}
-
-.navigation-buttons {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-  justify-content: center;
-}
-
-.nav-button {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.3s ease;
-}
-
-.nav-button:hover {
-  background-color: #0056b3;
-}
-
-.display-controls {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.mode-button {
-  padding: 10px 20px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.3s ease;
-}
-
-.mode-button:hover {
-  background-color: #218838;
-}
-
-.display-info {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.info-item {
+.schedule-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
-  background-color: #f8f9fa;
-  border-radius: 6px;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e0e0e0;
 }
 
-.info-item label {
-  font-weight: bold;
-  color: #495057;
+.schedule-header h1 {
+  margin: 0;
+  color: #333;
 }
 
-.info-item span {
-  color: #6c757d;
+.menu-button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.menu-button:hover {
+  background-color: #0056b3;
+}
+
+.schedule-tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.tab-button {
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: 16px;
+  color: #666;
+}
+
+.tab-button.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+}
+
+.tab-button:hover {
+  color: #007bff;
 }
 
 .loading {
-  padding: 20px;
-  background-color: #e3f2fd;
-  color: #1976d2;
-  border-radius: 8px;
   text-align: center;
-  margin-bottom: 20px;
+  padding: 40px;
+  color: #666;
 }
 
-.error-message {
-  padding: 20px;
+.error {
   background-color: #f8d7da;
   color: #721c24;
-  border: 1px solid #f5c6cb;
-  border-radius: 8px;
-  text-align: center;
+  padding: 10px;
+  border-radius: 4px;
   margin-bottom: 20px;
-}
-
-.schedule-info {
-  padding: 20px;
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-  border-radius: 8px;
-  text-align: center;
-}
-
-.schedule-info p {
-  margin: 10px 0;
 }
 </style>
