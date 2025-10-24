@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, nextTick, watchEffect } from 'vue';
+import { ref, onMounted, onUnmounted, watch, nextTick, watchEffect } from 'vue';
 import * as d3 from 'd3';
 
 // スケジュール情報の型定義
@@ -69,8 +69,10 @@ const drawDayBox = () => {
   // SVGをクリア
   d3.select(svgElement).selectAll('*').remove();
 
-  // SVGサイズ設定
-  const width = 140;
+  // SVGサイズ設定（画面サイズの25%）
+  const containerElement = svgElement.parentElement;
+  const containerWidth = containerElement ? containerElement.offsetWidth : window.innerWidth;
+  const width = Math.max(containerWidth * 0.25, 100); // 最小100px
   const height = 100;
 
   // SVGサイズを設定
@@ -415,9 +417,20 @@ watchEffect(() => {
   }
 });
 
+// 画面サイズ変更を監視
+const handleResize = () => {
+  if (svgRef.value) {
+    drawDayBox();
+  }
+};
+
 // コンポーネントマウント時とprops変更時に描画
 onMounted(() => {
   console.log('DayBox onMounted', svgRef.value);
+
+  // 画面サイズ変更イベントリスナーを追加
+  window.addEventListener('resize', handleResize);
+
   nextTick(() => {
     console.log('DayBox nextTick', svgRef.value);
     if (svgRef.value) {
@@ -432,6 +445,11 @@ onMounted(() => {
       }, 100);
     }
   });
+});
+
+onUnmounted(() => {
+  // 画面サイズ変更イベントリスナーを削除
+  window.removeEventListener('resize', handleResize);
 });
 
 watch(() => [props.date, props.holidayNote, props.schedules], () => {
@@ -454,7 +472,9 @@ watch(() => [props.date, props.holidayNote, props.schedules], () => {
 
 .day-box-svg {
   display: block;
-  width: 140px;
+  width: 25vw; /* 画面幅の25% */
+  min-width: 100px; /* 最小幅 */
+  max-width: 200px; /* 最大幅 */
   height: 100px;
 }
 </style>

@@ -211,7 +211,7 @@ const handleTimeClick = (year: number, month: number, day: number, hour: number,
 
 .daylong-box-grid {
   display: flex;
-  gap: 20px;
+  gap: 0px; /* 隙間をなくす */
   justify-content: center;
   flex-wrap: wrap;
 }
@@ -234,7 +234,7 @@ const handleTimeClick = (year: number, month: number, day: number, hour: number,
   padding: 10px;
   background-color: #f8f9fa;
   border-radius: 8px;
-  min-width: 140px;
+  width: 100%; /* コンテナの幅に合わせる */
   height: 60px; /* 統一された高さ */
   justify-content: center;
 }
@@ -266,7 +266,7 @@ const handleTimeClick = (year: number, month: number, day: number, hour: number,
 .scale-header {
   background-color: #e9ecef;
   border: 1px solid #dee2e6;
-  min-width: 60px; /* DayLongBoxScaleの幅に合わせる */
+  width: 60px; /* DayLongBoxScaleの幅に合わせる */
 }
 
 .scale-label {

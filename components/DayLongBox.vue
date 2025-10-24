@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, nextTick, watchEffect } from 'vue';
+import { ref, onMounted, onUnmounted, watch, nextTick, watchEffect } from 'vue';
 import * as d3 from 'd3';
 
 // スケジュール情報の型定義
@@ -68,8 +68,10 @@ const drawDayLongBox = () => {
   // SVGをクリア
   d3.select(svgElement).selectAll('*').remove();
 
-  // SVGサイズ設定
-  const width = 140;
+  // SVGサイズ設定（上の日付欄と同じサイズ）
+  const containerElement = svgElement.parentElement;
+  const containerWidth = containerElement ? containerElement.offsetWidth : window.innerWidth;
+  const width = containerWidth; // 上の日付欄と同じサイズ
   const allDayAreaHeight = 60; // 終日エリアの高さ
   const hourHeight = 50; // 1時間の高さ（2倍に拡大）
   const height = allDayAreaHeight + (24 * hourHeight); // 終日エリア + 24時間分の高さ
@@ -460,9 +462,20 @@ watchEffect(() => {
   }
 });
 
+// 画面サイズ変更を監視
+const handleResize = () => {
+  if (svgRef.value) {
+    drawDayLongBox();
+  }
+};
+
 // コンポーネントマウント時とprops変更時に描画
 onMounted(() => {
   console.log('DayLongBox onMounted', svgRef.value);
+
+  // 画面サイズ変更イベントリスナーを追加
+  window.addEventListener('resize', handleResize);
+
   nextTick(() => {
     console.log('DayLongBox nextTick', svgRef.value);
     if (svgRef.value) {
@@ -477,6 +490,11 @@ onMounted(() => {
       }, 100);
     }
   });
+});
+
+onUnmounted(() => {
+  // 画面サイズ変更イベントリスナーを削除
+  window.removeEventListener('resize', handleResize);
 });
 
 watch(() => [props.date, props.holidayNote, props.schedules, props.isCurrentMonth], () => {
@@ -499,7 +517,7 @@ watch(() => [props.date, props.holidayNote, props.schedules, props.isCurrentMont
 
 .day-long-box-svg {
   display: block;
-  width: 140px;
+  width: 100%; /* 上の日付欄と同じサイズ */
   height: 1260px; /* 60px (終日エリア) + 24 * 50px (時間エリア) = 1260px */
 }
 </style>
