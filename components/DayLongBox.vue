@@ -465,6 +465,7 @@ watchEffect(() => {
 // 画面サイズ変更を監視
 const handleResize = () => {
   if (svgRef.value) {
+    console.log("★ Resize")
     drawDayLongBox();
   }
 };
@@ -513,6 +514,7 @@ watch(() => [props.date, props.holidayNote, props.schedules, props.isCurrentMont
   margin: 0px;
   border: none;
   box-sizing: border-box;
+  width: 100%;
 }
 
 .day-long-box-svg {

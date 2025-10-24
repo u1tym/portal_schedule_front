@@ -21,20 +21,13 @@
 
     <!-- 週3日表示（DayLongBoxScale + DayLongBoxを並べる） -->
     <div class="weekly-container">
-      <div class="daylong-box-grid">
-        <!-- 時刻スケール -->
-        <div class="daylong-box-wrapper">
-          <div class="day-header scale-header">
-            <div class="scale-label">時刻</div>
-          </div>
-          <DayLongBoxScale />
-        </div>
 
-        <!-- 各日のDayLongBox -->
+      <div class="weekly-header">
+        <div class="weekly-scale"></div>
         <div
           v-for="day in weekDays"
           :key="`${day.date.getFullYear()}-${day.date.getMonth()}-${day.date.getDate()}`"
-          class="daylong-box-wrapper"
+          class="weekly-day"
         >
           <div class="day-header">
             <div class="day-info">
@@ -43,6 +36,16 @@
             </div>
             <div class="day-of-week">{{ getDayOfWeekText(day.date) }}</div>
           </div>
+        </div>
+      </div>
+
+      <div class="weekly-body">
+        <div class="weekly-scale"><DayLongBoxScale /></div>
+        <div
+          v-for="day in weekDays"
+          :key="`${day.date.getFullYear()}-${day.date.getMonth()}-${day.date.getDate()}`"
+          class="weekly-day"
+        >
           <DayLongBox
             :date="day.date"
             :holiday-note="getHolidayNote(day.date)"
@@ -53,7 +56,9 @@
           />
         </div>
       </div>
+
     </div>
+
   </div>
 </template>
 
@@ -155,6 +160,10 @@ const handleTimeClick = (year: number, month: number, day: number, hour: number,
 <style scoped>
 .schedule-weekly-view {
   width: 100%;
+  border: 1px solid #f00;
+
+  display: flex;
+  flex-direction: column;
 }
 
 .control-panel {
@@ -207,6 +216,8 @@ const handleTimeClick = (year: number, month: number, day: number, hour: number,
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   overflow: hidden;
   padding: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 .daylong-box-grid {
@@ -216,11 +227,14 @@ const handleTimeClick = (year: number, month: number, day: number, hour: number,
   flex-wrap: wrap;
 }
 
-.daylong-box-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.weekly-scale {
+  width: 10vw;
 }
+
+.weekly-day {
+  width: 25vw;
+}
+
 
 .daylong-box-wrapper:first-child {
   align-items: flex-start;
@@ -273,5 +287,11 @@ const handleTimeClick = (year: number, month: number, day: number, hour: number,
   font-size: 12px;
   font-weight: bold;
   color: #495057;
+}
+
+.weekly-header,
+.weekly-body {
+  display: flex;
+  flex-direction: row;
 }
 </style>
